@@ -77,12 +77,34 @@ class ChangeRequest(BaseModel):
 
 
 def initialize_ee():
+    """Initialize Earth Engine using a Render secret or local credentials."""
     global EE_READY
-    if not EE_READY:
-        if not EE_PROJECT:
-            raise RuntimeError("EE_PROJECT is missing from .env")
+    if EE_READY:
+        return
+
+    if not EE_PROJECT:
+        raise RuntimeError("EE_PROJECT environment variable is missing")
+
+    key_path = Path("/etc/secrets/gee-service-account.json")
+    if key_path.is_file():
+        import json
+
+        with key_path.open("r", encoding="utf-8") as f:
+            service_account = json.load(f)
+        credentials = ee.ServiceAccountCredentials(
+            service_account["client_email"], str(key_path)
+        )
+        ee.Initialize(credentials=credentials, project=EE_PROJECT)
+    elif os.getenv("RENDER"):
+        raise RuntimeError(
+            "Earth Engine secret file is missing on Render: "
+            "/etc/secrets/gee-service-account.json"
+        )
+    else:
+        # On the developer's computer, use existing Earth Engine credentials.
         ee.Initialize(project=EE_PROJECT)
-        EE_READY = True
+
+    EE_READY = True
 
 
 def validate_geometry(data):
