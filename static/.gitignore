@@ -1,0 +1,15 @@
+
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+__pycache__/
+*.pyc
+.vscode/
+*.log
+*credentials*.json
+*service-account*.json
+*service_account*.json
+*.pem
+*.key
